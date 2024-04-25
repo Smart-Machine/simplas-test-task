@@ -1,0 +1,30 @@
+syntax = "proto3";
+option go_package = "service/pkg/proto";
+
+import "google/protobuf/wrappers.proto";
+
+service Service {
+  rpc Create(APICreateRequest)             returns (APIResponse) {}
+  rpc GetList(google.protobuf.StringValue) returns (APIResponse) {}
+  rpc GetOne(google.protobuf.StringValue)  returns (APIResponse) {}
+  rpc Update(APIUpdateRequest)             returns (APIResponse) {}
+  rpc Delete(google.protobuf.StringValue)  returns (APIResponse) {}
+}
+
+message APIResponse {
+  int32  status_code = 1;
+  string content = 2;
+}
+
+message APICreateRequest {
+  string              id = 1;
+  map<string, string> categories = 2;
+  map<string, string> title = 3;
+  string              type = 4;
+  double              posted = 5;
+}
+
+message APIUpdateRequest {
+  int64            id = 1;
+  APICreateRequest data = 2;
+}

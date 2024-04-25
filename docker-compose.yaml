@@ -1,0 +1,44 @@
+networks:
+  backend:
+    driver: bridge
+
+services:
+  simplas-service:
+    build:
+      context: .
+      dockerfile: ./service/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ELASTIC_USERNAME=${ELASTIC_USERNAME}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    networks:
+      - backend
+    healthcheck: # dummy healthcheck
+      test: ["CMD", "echo", "healthy"]
+      interval: 10s
+      timeout: 0s
+      retries: 1
+      start_period: 15s
+
+  simplas-api:
+    build:
+      context: .
+      dockerfile: ./httpProxy/Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      simplas-service:
+        condition: service_healthy
+    networks:
+      - backend
+
+  simplas-worker:
+    build:
+      context: .
+      dockerfile: ./worker/Dockerfile
+    depends_on:
+      simplas-service:
+        condition: service_healthy
+    networks:
+      - backend

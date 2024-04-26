@@ -12,7 +12,7 @@ make clean
 ----
 ### API Contracts
 
-##### Insert an object 
+#### Insert an object 
 ```bash
 curl --location --request POST 'http://localhost:8001/advertisement/' \
     --header 'Content-Type: application/json' \
@@ -38,7 +38,7 @@ curl --location --request GET 'http://localhost:8001/advertisement/?title=Casa'
 curl --location --request GET 'http://localhost:8001/advertisement/32679487'
 ```
 
-### Update an object
+#### Update an object
 ```bash
 curl --location --request PUT 'http://localhost:8001/advertisement/32679487' \
     --header 'Content-Type: application/json' \
@@ -54,7 +54,7 @@ curl --location --request PUT 'http://localhost:8001/advertisement/32679487' \
     }'
 ```
 
-### Delete an object
+#### Delete an object
 ```bash
 curl --location --request DELETE 'http://localhost:8001/advertisement/32679487'
 ```

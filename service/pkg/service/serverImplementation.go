@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Smart-Machine/simplas-test-task/service/pkg/proto"
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"log"
 	"strconv"
@@ -41,23 +42,21 @@ func (ss *ServiceServer) Create(_ context.Context, req *proto.APICreateRequest) 
 	}, nil
 }
 
-func (ss *ServiceServer) GetList(_ context.Context, search *wrapperspb.StringValue) (*proto.APIResponse, error) {
-	//query := "{\"query\": {\"nested\": {\"path\": \"title\", \"query\": {\"bool\": \"must\": [ {\"match\": {\"title.ro\": \"%s\"}}, {\"match\": {\"title.ru\": \"%s\" }} ] }}}"
-	//query := "{\"query\":{\"bool\":{\"must\":[{\"match\":{\"title.ro\":\"%s\"}},{\"match\":{\"title.ru\":\"%s\"}}]}}}"
-	query := "{\"query\":{\"bool\":{\"must\":[{\"match\":{\"title.ro\":\"Casa\"}},{\"match\":{\"title.ru\":\"Casa\"}}]}}}"
+func (ss *ServiceServer) GetList(ctx context.Context, search *wrapperspb.StringValue) (*proto.APIResponse, error) {
+	// TODO: Refactor query to multimatch for both `ro` and `ru` matching.
+	query := `{"query": {"match": {"title.ro": "%s"} } }`
 
-	res, err := ss.elasticClient.Search(
-		ss.elasticClient.Search.WithQuery(
-			query,
-			//fmt.Sprintf(query, search.Value, search.Value),
-		),
-	)
+	req := esapi.SearchRequest{
+		Index: []string{"advertisement"},
+		Body:  strings.NewReader(fmt.Sprintf(query, search.GetValue())),
+	}
+
+	res, err := req.Do(ctx, ss.elasticClient)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Error searching documents: %s", err)
 	}
 	defer res.Body.Close()
 
-	log.Println(res)
 	return &proto.APIResponse{
 		StatusCode: int32(res.StatusCode),
 		Content:    res.String(),
@@ -67,7 +66,7 @@ func (ss *ServiceServer) GetList(_ context.Context, search *wrapperspb.StringVal
 func (ss *ServiceServer) GetOne(_ context.Context, id *wrapperspb.StringValue) (*proto.APIResponse, error) {
 	res, err := ss.elasticClient.Get(
 		"advertisement",
-		id.Value,
+		id.GetValue(),
 		ss.elasticClient.Get.WithRefresh(true),
 	)
 	if err != nil {
@@ -108,7 +107,7 @@ func (ss *ServiceServer) Update(_ context.Context, req *proto.APIUpdateRequest) 
 func (ss *ServiceServer) Delete(_ context.Context, id *wrapperspb.StringValue) (*proto.APIResponse, error) {
 	res, err := ss.elasticClient.Delete(
 		"advertisement",
-		id.Value,
+		id.GetValue(),
 		ss.elasticClient.Delete.WithRefresh("true"),
 	)
 	if err != nil {
